@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SI — Pick'em · Prediction League</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--red:#C1272D;--dark:#0a0a0a;--mid:#111;--card:#181818;--border:#242424;--muted:#666;--text:#e8e8e8;--sub:#888;--gold:#E8A020;--green:#22c55e;--blue:#3b82f6}
+body{font-family:'Barlow',sans-serif;background:var(--dark);color:var(--text);width:1280px;height:720px;overflow:hidden;cursor:none}
+.scene{width:1280px;height:720px;position:relative;overflow:hidden}
+.cursor{position:fixed;width:14px;height:14px;border-radius:50%;background:white;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:transform .15s ease}
+.cursor.clicking{transform:translate(-50%,-50%) scale(.6)}
+.cursor-ring{position:fixed;width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.25);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:left .1s ease,top .1s ease}
+
+/* NAV */
+.nav{height:52px;background:var(--dark);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:0}
+.logo{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:900;color:white;margin-right:28px;letter-spacing:-1px;font-style:italic}
+.logo span{color:var(--red)}
+.ni{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:0 14px;height:52px;display:flex;align-items:center;border-bottom:2px solid transparent;transition:color .2s,border-color .2s}
+.ni.act{color:white;border-bottom-color:var(--red)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.nb{font-family:'Barlow Condensed',sans-serif;background:rgba(232,160,32,.12);border:1px solid rgba(232,160,32,.3);border-radius:4px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.06em}
+.nav-av{width:32px;height:32px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:white}
+
+/* PAGE HEADER */
+.page-hdr{background:var(--mid);border-bottom:1px solid var(--border);padding:16px 28px;display:flex;align-items:center;justify-content:space-between}
+.ph-left{}
+.ph-kicker{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--red);margin-bottom:4px}
+.ph-title{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:white;letter-spacing:-.5px;line-height:1}
+.ph-sub{font-size:12px;color:var(--sub);margin-top:3px}
+.stat-pills{display:flex;gap:8px}
+.stat-pill{background:var(--card);border:1px solid var(--border);border-radius:5px;padding:10px 16px;text-align:center}
+.sp-num{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;line-height:1}
+.sp-num.gold{color:var(--gold)}
+.sp-num.green{color:var(--green)}
+.sp-num.red{color:var(--red)}
+.sp-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:2px}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:1fr 1fr 280px;height:calc(720px - 52px - 76px);border-top:1px solid var(--border)}
+.col{border-right:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column}
+.col:last-child{border-right:none}
+.col-header{padding:12px 16px;border-bottom:1px solid var(--border);font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.col-body{padding:12px 16px;overflow:hidden;flex:1;display:flex;flex-direction:column;gap:10px}
+
+/* MATCH CARDS */
+.match-card{background:var(--card);border:1px solid var(--border);border-radius:6px;overflow:hidden;transition:border-color .3s}
+.match-card.hi{border-color:var(--red)}
+.mc-sport-bar{padding:7px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02)}
+.mc-sport{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--red)}
+.mc-time{font-size:10px;color:var(--muted)}
+.mc-body{padding:10px 12px}
+.mc-teams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;margin-bottom:9px}
+.mct{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:white;letter-spacing:-.2px}
+.mc-vs{font-size:11px;color:var(--border);text-align:center;font-weight:600}
+.pick-btns{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:6px}
+.pb{background:transparent;border:1px solid var(--border);border-radius:3px;padding:7px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.04em;cursor:pointer;transition:all .22s}
+.pb.sel{background:var(--red);border-color:var(--red);color:white}
+.mc-stat{font-size:10px;color:var(--muted);display:flex;align-items:center;justify-content:space-between}
+.mc-stat span{color:var(--sub)}
+
+/* STREAK */
+.streak-wrap{background:var(--card);border:1px solid var(--border);border-radius:5px;padding:10px 12px;flex-shrink:0}
+.sw-label{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.sw-dots{display:flex;gap:4px}
+.sd{width:28px;height:28px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800}
+.sd-w{background:var(--red);color:white}
+.sd-l{background:rgba(255,255,255,.06);color:var(--muted)}
+.sd-p{background:transparent;border:1px dashed var(--border);color:var(--border)}
+.sd-new{background:var(--red);color:white;transform:scale(0);transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+.sd-new.pop{transform:scale(1)}
+
+/* BOLD CALLS */
+.bold-card{background:var(--card);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:10px}
+.bc-header{background:rgba(232,160,32,.08);border-bottom:1px solid rgba(232,160,32,.15);padding:8px 12px;display:flex;justify-content:space-between;align-items:center}
+.bc-title{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
+.bc-pts{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;color:var(--gold)}
+.bc-body{padding:10px 12px}
+.bc-q{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:white;margin-bottom:8px;letter-spacing:-.1px}
+.bc-opts{display:flex;flex-direction:column;gap:4px}
+.bo{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:3px;padding:6px 10px;font-size:11px;color:var(--sub);cursor:pointer;transition:all .22s}
+.bo.sel{background:rgba(193,39,45,.15);border-color:var(--red);color:white}
+
+/* WRITER PICKS */
+.writer-card{background:var(--card);border:1px solid var(--border);border-radius:6px;overflow:hidden;flex-shrink:0}
+.wc-header{background:rgba(255,255,255,.03);border-bottom:1px solid var(--border);padding:8px 12px}
+.wc-title{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.wr{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;opacity:0;transform:translateX(8px);transition:opacity .35s,transform .35s}
+.wr:last-child{border-bottom:none}
+.wr.show{opacity:1;transform:translateX(0)}
+.wr-av{width:26px;height:26px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:800;color:white}
+.wr-name{font-size:11px;font-weight:500;color:var(--text);flex:1}
+.wr-pick{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;color:var(--red)}
+
+/* LEADERBOARD */
+.lb-header{background:var(--mid);border-bottom:1px solid var(--border);padding:12px 16px;flex-shrink:0}
+.lb-title{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.lb-scope{font-size:10px;color:var(--muted)}
+.lb-rows{padding:0 16px;flex:1;display:flex;flex-direction:column;padding-top:4px;overflow:hidden}
+.lb-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);opacity:0;transform:translateY(6px);transition:opacity .3s,transform .3s}
+.lb-row.show{opacity:1;transform:translateY(0)}
+.lb-row.me{background:rgba(193,39,45,.07);margin:0 -16px;padding:8px 16px;border-radius:0}
+.lb-rank{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:var(--muted);width:22px;text-align:center}
+.lb-rank.me{color:var(--red)}
+.lb-av{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;color:white}
+.lb-av.me{background:var(--red)}
+.lb-name{font-size:12px;color:var(--text);flex:1}
+.lb-name.me{font-weight:600;color:var(--red)}
+.lb-score{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--text)}
+.lb-score.me{color:var(--red)}
+
+.friends-header{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:10px 16px 4px;border-top:1px solid var(--border);flex-shrink:0}
+.friends-rows{padding:0 16px;flex-shrink:0}
+
+/* SCORE FLASH */
+.pts-flash{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);background:var(--red);color:white;font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:900;padding:14px 28px;border-radius:6px;z-index:200;letter-spacing:-.5px;transition:transform .4s cubic-bezier(.34,1.56,.64,1),opacity .3s}
+.pts-flash.show{transform:translate(-50%,-50%) scale(1)}
+.pts-flash.fade{opacity:0}
+
+/* SEASON BAR */
+.season-bar{flex-shrink:0;padding:8px 12px;border-top:1px solid var(--border);background:rgba(255,255,255,.02)}
+.sb-label{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.sb-weeks{display:flex;gap:3px}
+.sw{width:22px;height:22px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700}
+.sw-w{background:rgba(193,39,45,.8);color:white}
+.sw-l{background:rgba(255,255,255,.06);color:var(--muted)}
+.sw-now{background:var(--red);color:white;border:2px solid rgba(255,255,255,.3)}
+.sw-f{background:rgba(255,255,255,.03);border:1px dashed var(--border);color:var(--border)}
+
+.ann{position:absolute;background:white;color:#111;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;padding:7px 14px;border-radius:5px;pointer-events:none;opacity:0;transition:opacity .3s ease;white-space:nowrap;z-index:100;letter-spacing:-.1px;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.ann::after{content:'';position:absolute;left:14px;bottom:-6px;border:6px solid transparent;border-top-color:white;border-bottom:0}
+.ann.show{opacity:1}
+.ann.up::after{display:none}
+.ann.up::before{content:'';position:absolute;left:14px;top:-6px;border:6px solid transparent;border-bottom-color:white;border-top:0}
+</style>
+</head>
+<body>
+<div class="scene">
+<div class="cursor" id="cur"></div>
+<div class="cursor-ring" id="ring"></div>
+
+<div class="nav">
+  <div class="logo">S<span>I</span></div>
+  <div class="ni">My SI</div><div class="ni">NFL</div><div class="ni">NBA</div>
+  <div class="ni act">Pick'em</div><div class="ni">SI TV</div>
+  <div class="nav-right">
+    <div class="nb">Insider · 340 pts</div>
+    <div class="nav-av">MR</div>
+  </div>
+</div>
+
+<div class="page-hdr" style="position:relative;overflow:hidden">
+<img style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.06;pointer-events:none" src="https://images.unsplash.com/photo-1552667466-07770ae110d0?w=1280&q=60&fit=crop" alt="">
+  <div class="ph-left">
+    <div class="ph-kicker">SI Pick'em · Season 2025–26</div>
+    <div class="ph-title">Your weekly predictions</div>
+    <div class="ph-sub">Make your picks before kickoff. Results update live during every game.</div>
+  </div>
+  <div class="stat-pills">
+    <div class="stat-pill"><div class="sp-num gold" id="rankStat">#4</div><div class="sp-label">Your rank</div></div>
+    <div class="stat-pill"><div class="sp-num">8,204</div><div class="sp-label">Players</div></div>
+    <div class="stat-pill"><div class="sp-num green" id="accStat">68%</div><div class="sp-label">Accuracy</div></div>
+    <div class="stat-pill"><div class="sp-num red" id="ptsStat">82</div><div class="sp-label">Points</div></div>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- COL 1: PICKS -->
+  <div class="col">
+    <div class="col-header">
+      Your matchups — Week 12
+      <span style="font-size:10px;color:var(--green);display:flex;align-items:center;gap:4px"><span style="width:5px;height:5px;border-radius:50%;background:var(--green);display:inline-block"></span>Live picks open</span>
+    </div>
+    <div class="col-body">
+      <div class="match-card" id="mc0">
+        <div class="mc-sport-bar"><div class="mc-sport">NFL · Cowboys · Your pick</div><div class="mc-time">Sun 4:25pm ET</div></div>
+        <div class="mc-body">
+          <div class="mc-teams"><div class="mct">Cowboys</div><div class="mc-vs">vs</div><div class="mct">Eagles</div></div>
+          <div class="pick-btns">
+            <div class="pb sel" id="pb0a">Dallas wins</div>
+            <div class="pb" id="pb0b">Philadelphia wins</div>
+          </div>
+          <div class="mc-stat">63% of 8,204 SI readers picking Dallas <span>+10 pts</span></div>
+        </div>
+      </div>
+      <div class="match-card" id="mc1">
+        <div class="mc-sport-bar"><div class="mc-sport">NBA · Lakers · Make your pick</div><div class="mc-time">Tonight 8:30pm ET</div></div>
+        <div class="mc-body">
+          <div class="mc-teams"><div class="mct">Lakers</div><div class="mc-vs">vs</div><div class="mct">Celtics</div></div>
+          <div class="pick-btns">
+            <div class="pb" id="pb1a">LA wins</div>
+            <div class="pb" id="pb1b">Boston wins</div>
+          </div>
+          <div class="mc-stat">57% picking Lakers <span>+10 pts</span></div>
+        </div>
+      </div>
+      <div class="match-card" id="mc2">
+        <div class="mc-sport-bar"><div class="mc-sport">NHL · Rangers · Make your pick</div><div class="mc-time">Fri 7:00pm ET</div></div>
+        <div class="mc-body">
+          <div class="mc-teams"><div class="mct">Rangers</div><div class="mc-vs">vs</div><div class="mct">Capitals</div></div>
+          <div class="pick-btns">
+            <div class="pb" id="pb2a">NYR wins</div>
+            <div class="pb" id="pb2b">WSH wins</div>
+          </div>
+          <div class="mc-stat">71% picking Rangers <span>+10 pts</span></div>
+        </div>
+      </div>
+      <div class="streak-wrap">
+        <div class="sw-label">Pick streak — Week 12</div>
+        <div class="sw-dots">
+          <div class="sd sd-w">W</div><div class="sd sd-w">W</div><div class="sd sd-w">W</div>
+          <div class="sd sd-l">L</div><div class="sd sd-w">W</div>
+          <div class="sd sd-new" id="sd5">W</div>
+          <div class="sd sd-p">?</div><div class="sd sd-p">?</div>
+        </div>
+      </div>
+      <div class="season-bar">
+        <div class="sb-label">Season progress — 2025–26</div>
+        <div class="sb-weeks">
+          <div class="sw sw-w">1</div><div class="sw sw-w">2</div><div class="sw sw-l">3</div>
+          <div class="sw sw-w">4</div><div class="sw sw-w">5</div><div class="sw sw-w">6</div>
+          <div class="sw sw-l">7</div><div class="sw sw-w">8</div><div class="sw sw-w">9</div>
+          <div class="sw sw-w">10</div><div class="sw sw-w">11</div>
+          <div class="sw sw-now">12</div>
+          <div class="sw sw-f">13</div><div class="sw sw-f">14</div><div class="sw sw-f">15</div><div class="sw sw-f">16</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COL 2: BOLD CALLS + WRITERS -->
+  <div class="col">
+    <div class="col-header">Bold calls + SI writer predictions</div>
+    <div class="col-body">
+      <div class="bold-card">
+        <div class="bc-header">
+          <div class="bc-title">Bold call · Cowboys game</div>
+          <div class="bc-pts">+25 pts if correct</div>
+        </div>
+        <div class="bc-body">
+          <div class="bc-q">How does Cowboys vs Eagles end?</div>
+          <div class="bc-opts">
+            <div class="bo sel" id="bo0">Dallas wins by 7 or more</div>
+            <div class="bo" id="bo1">Dallas wins by 1–6</div>
+            <div class="bo" id="bo2">Philadelphia wins close</div>
+            <div class="bo" id="bo3">Philadelphia blowout</div>
+          </div>
+        </div>
+      </div>
+      <div class="bold-card">
+        <div class="bc-header">
+          <div class="bc-title">Player performance · LeBron</div>
+          <div class="bc-pts">+20 pts if correct</div>
+        </div>
+        <div class="bc-body">
+          <div class="bc-q">Will LeBron score 25+ points vs Boston?</div>
+          <div class="bc-opts">
+            <div class="bo" id="bo4">Yes — 25 or more</div>
+            <div class="bo" id="bo5">No — under 25</div>
+          </div>
+        </div>
+      </div>
+      <div class="writer-card">
+        <div class="wc-header"><div class="wc-title">What SI writers predict</div></div>
+        <div class="wr" id="wr0"><div class="wr-av">TF</div><div class="wr-name">Tom Friend</div><div class="wr-pick">Cowboys −3</div></div>
+        <div class="wr" id="wr1"><div class="wr-av">CM</div><div class="wr-name">Chris Mannix</div><div class="wr-pick">Celtics win</div></div>
+        <div class="wr" id="wr2"><div class="wr-av">KH</div><div class="wr-name">Kevin Hitt</div><div class="wr-pick">Rangers +1</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COL 3: LEADERBOARD -->
+  <div class="col">
+    <div class="lb-header">
+      <div class="lb-title">Leaderboard</div>
+      <div class="lb-scope">Week 12 · All 8,204 SI readers</div>
+    </div>
+    <div class="lb-rows">
+      <div class="lb-row" id="lb0"><div class="lb-rank">1</div><div class="lb-av">JM</div><div class="lb-name">JasonM</div><div class="lb-score">92</div></div>
+      <div class="lb-row" id="lb1"><div class="lb-rank">2</div><div class="lb-av">SR</div><div class="lb-name">SportsRaven</div><div class="lb-score">88</div></div>
+      <div class="lb-row" id="lb2"><div class="lb-rank">3</div><div class="lb-av">AL</div><div class="lb-name">AnalysisLou</div><div class="lb-score">85</div></div>
+      <div class="lb-row me" id="lb3"><div class="lb-rank me">4</div><div class="lb-av me">MR</div><div class="lb-name me">You · Marcus R.</div><div class="lb-score me" id="myPts">82</div></div>
+      <div class="lb-row" id="lb4"><div class="lb-rank">5</div><div class="lb-av">PK</div><div class="lb-name">ProKnower</div><div class="lb-score">79</div></div>
+      <div class="lb-row" id="lb5"><div class="lb-rank">6</div><div class="lb-av">DW</div><div class="lb-name">DraftWizard</div><div class="lb-score">74</div></div>
+      <div class="lb-row" id="lb6"><div class="lb-rank">7</div><div class="lb-av">RB</div><div class="lb-name">RealBaller</div><div class="lb-score">71</div></div>
+    </div>
+    <div class="friends-header">Your friends</div>
+    <div class="friends-rows">
+      <div class="lb-row show" style="padding:6px 0"><div class="lb-rank">12</div><div class="lb-av">DL</div><div class="lb-name">DanLevy</div><div class="lb-score">61</div></div>
+      <div class="lb-row show" style="padding:6px 0;border-bottom:none"><div class="lb-rank">19</div><div class="lb-av">MG</div><div class="lb-name">MikeG</div><div class="lb-score">48</div></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="pts-flash" id="ptsFlash">+10 pts!</div>
+
+<div class="ann" id="an1" style="left:200px;top:195px">Your followed teams auto-populate the matchups</div>
+<div class="ann" id="an2" style="left:200px;top:360px">Lakers pick — your team, your game</div>
+<div class="ann" id="an3" style="left:200px;top:530px">3 return moments: pre-game · live · post-result</div>
+<div class="ann" id="an4" style="left:550px;top:270px">Bold calls earn 2.5× points for confident predictions</div>
+<div class="ann" id="an5" style="left:550px;top:450px">SI writer picks add editorial credibility to the feature</div>
+<div class="ann up" id="an6" style="left:890px;top:590px">Rank among 8,204 SI readers — identity investment</div>
+<div class="ann up" id="an7" style="left:890px;top:490px">Your score updates in real time after results come in</div>
+
+</div>
+<script>
+const cur=document.getElementById('cur'),ring=document.getElementById('ring');
+let mx=200,my=300,rx=200,ry=300;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px'});
+setInterval(()=>{rx+=(mx-rx)*.12;ry+=(my-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px'},16);
+let ax=200,ay=300;
+function mv(x,y,d){return new Promise(r=>{const st=Math.ceil(d/14),dx=(x-ax)/st,dy=(y-ay)/st;let i=0;const t=setInterval(()=>{ax+=dx;ay+=dy;cur.style.left=ax+'px';cur.style.top=ay+'px';mx=ax;my=ay;if(++i>=st){ax=x;ay=y;clearInterval(t);setTimeout(r,50)}},14)})}
+function ck(){return new Promise(r=>{cur.classList.add('clicking');setTimeout(()=>{cur.classList.remove('clicking');r()},220)})}
+function wt(ms){return new Promise(r=>setTimeout(r,ms))}
+function show(id){const el=document.getElementById(id);if(el)el.classList.add('show')}
+function showAnn(id,dur){show(id);return wt(dur).then(()=>document.getElementById(id)?.classList.remove('show'))}
+
+async function run(){
+  await wt(500);
+
+  // Leaderboard cascades in
+  for(let i=0;i<=6;i++){setTimeout(()=>show('lb'+i),i*90)}
+  await wt(900);
+
+  // Writer picks
+  ['wr0','wr1','wr2'].forEach((id,i)=>setTimeout(()=>show(id),i*180));
+  await wt(800);
+
+  // Make NBA pick
+  showAnn('an1',3800);
+  await mv(270,305,1000);
+  await wt(300);
+  showAnn('an2',3800);
+  await mv(200,378,800);
+  await wt(200);
+  await ck();
+  document.getElementById('pb1a').classList.add('sel');
+  document.getElementById('mc1').classList.add('hi');
+  await wt(200);
+  document.getElementById('mc1').classList.remove('hi');
+
+  // Points flash
+  const pf=document.getElementById('ptsFlash');
+  pf.classList.add('show');
+  await wt(700);
+  pf.classList.add('fade');
+  await wt(400);
+  pf.classList.remove('show','fade');
+
+  await wt(300);
+
+  // Rangers pick
+  await mv(200,478,800);
+  await ck();
+  document.getElementById('pb2a').classList.add('sel');
+  // Streak pop
+  await wt(350);
+  document.getElementById('sd5').classList.add('pop');
+  await wt(400);
+
+  // Bold call
+  showAnn('an3',2000);
+  await wt(800);
+  showAnn('an4',2000);
+  await mv(560,350,1200);
+  await wt(300);
+  await mv(560,430,400);
+  await ck();
+  document.getElementById('bo4').classList.add('sel');
+  await wt(500);
+
+  // Writer picks hover
+  showAnn('an5',3800);
+  await mv(560,490,800);
+  await wt(1000);
+
+  // Leaderboard score update
+  showAnn('an6',3800);
+  await mv(980,400,1200);
+  await wt(600);
+  showAnn('an7',3800);
+  document.getElementById('myPts').textContent='92';
+  document.getElementById('ptsStat').textContent='92';
+  document.getElementById('rankStat').textContent='#2';
+  document.getElementById('accStat').textContent='72%';
+  // Pulse my row
+  const myRow=document.getElementById('lb3');
+  myRow.style.background='rgba(193,39,45,.18)';
+  await wt(400);
+  myRow.style.background='rgba(193,39,45,.07)';
+  await wt(1800);
+
+  // RESET
+  ['pb1a','pb1b','pb2a','pb2b','bo4','bo5'].forEach(id=>document.getElementById(id)?.classList.remove('sel'));
+  for(let i=0;i<=6;i++) document.getElementById('lb'+i)?.classList.remove('show');
+  ['wr0','wr1','wr2'].forEach(id=>document.getElementById(id)?.classList.remove('show'));
+  document.getElementById('sd5').classList.remove('pop');
+  document.getElementById('myPts').textContent='82';
+  document.getElementById('ptsStat').textContent='82';
+  document.getElementById('rankStat').textContent='#4';
+  document.getElementById('accStat').textContent='68%';
+
+  run();
+}
+window.onload=()=>setTimeout(run,400);
+</script>
+</body>
+</html>

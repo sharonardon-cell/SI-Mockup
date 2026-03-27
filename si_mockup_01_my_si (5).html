@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SI — My SI · Personalised Fan Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#C1272D;--dark:#0a0a0a;--mid:#141414;--card:#1c1c1c;
+  --border:#2a2a2a;--muted:#666;--text:#e8e8e8;--sub:#999;
+  --gold:#E8A020;--green:#22c55e;
+}
+body{font-family:'Barlow',sans-serif;background:var(--dark);color:var(--text);width:1280px;height:720px;overflow:hidden;cursor:none}
+.scene{width:1280px;height:720px;position:relative;overflow:hidden}
+
+/* CURSOR */
+.cursor{position:fixed;width:14px;height:14px;border-radius:50%;background:white;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:transform .15s ease,width .2s,height .2s}
+.cursor.big{width:40px;height:40px}
+.cursor.clicking{transform:translate(-50%,-50%) scale(.6)}
+.cursor-trail{position:fixed;width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,.3);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:left .08s ease,top .08s ease}
+
+/* NAV */
+.nav{height:52px;background:var(--dark);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:0;position:relative;z-index:10}
+.logo{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:900;color:white;margin-right:28px;letter-spacing:-1px;font-style:italic}
+.logo span{color:var(--red)}
+.nav-items{display:flex;gap:0;flex:1}
+.ni{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:0 14px;height:52px;display:flex;align-items:center;border-bottom:2px solid transparent;transition:color .2s,border-color .2s;cursor:pointer}
+.ni:hover,.ni.act{color:white;border-bottom-color:var(--red)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.passport-badge{background:linear-gradient(135deg,#1a0e00,#2d1a00);border:1px solid var(--gold);border-radius:4px;padding:5px 12px;display:flex;align-items:center;gap:6px;cursor:pointer}
+.pb-dot{width:6px;height:6px;border-radius:50%;background:var(--gold)}
+.pb-text{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.06em}
+.nav-avatar{width:32px;height:32px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:white;border:1.5px solid #333;cursor:pointer}
+
+/* ONBOARDING SCREEN */
+.ob-screen{position:absolute;inset:52px 0 0;background:var(--dark);display:grid;grid-template-columns:1fr 1fr;opacity:0;transition:opacity .5s ease;pointer-events:none}
+.ob-screen.active{opacity:1;pointer-events:all}
+
+.ob-left{padding:40px 48px;border-right:1px solid var(--border);display:flex;flex-direction:column}
+.ob-kicker{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--red);margin-bottom:10px}
+.ob-title{font-family:'Barlow Condensed',sans-serif;font-size:44px;font-weight:900;color:white;line-height:.95;margin-bottom:12px;letter-spacing:-.5px}
+.ob-sub{font-size:14px;color:var(--sub);line-height:1.5;margin-bottom:28px;max-width:360px}
+.ob-steps{display:flex;gap:4px;margin-bottom:32px}
+.ob-step{height:2px;flex:1;background:var(--border);border-radius:1px;transition:background .4s}
+.obs-done{background:var(--red)}
+.obs-now{background:white}
+
+.league-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px}
+.lc{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:14px 6px;text-align:center;cursor:pointer;transition:all .25s ease;position:relative;overflow:hidden}
+.lc::before{content:'';position:absolute;inset:0;background:var(--red);opacity:0;transition:opacity .25s}
+.lc.sel{border-color:var(--red);background:#1a0304}
+.lc.sel::before{opacity:.08}
+.lc-abbr{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:white;position:relative;z-index:1;letter-spacing:-.5px}
+.lc-name{font-size:9px;color:var(--sub);margin-top:3px;position:relative;z-index:1;text-transform:uppercase;letter-spacing:.08em}
+.lc-check{position:absolute;top:5px;right:6px;width:12px;height:12px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;font-size:7px;color:white;font-weight:700}
+.lc.sel .lc-check{opacity:1}
+
+.team-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px}
+.tc{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:5px 12px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--sub);letter-spacing:.04em;cursor:pointer;transition:all .2s;text-transform:uppercase}
+.tc.sel{background:#1a0304;border-color:var(--red);color:white}
+
+.cta{background:var(--red);border-radius:4px;padding:14px 28px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:white;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;text-align:center;transition:transform .15s;display:inline-block;margin-top:auto}
+.cta:active,.cta.press{transform:scale(.97)}
+
+/* ONBOARD RIGHT — PREVIEW */
+.ob-right{padding:32px;background:#0d0d0d;display:flex;flex-direction:column;gap:12px;overflow:hidden}
+.preview-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.preview-card{border-radius:6px;overflow:hidden;position:relative;flex:1;min-height:0;background:var(--card);border:1px solid var(--border);opacity:0;transform:translateY(10px);transition:opacity .5s,transform .5s}
+.preview-card.show{opacity:1;transform:translateY(0)}
+.pc-img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.pc-gradient{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.95) 0%,rgba(0,0,0,.5) 50%,rgba(0,0,0,.1) 100%)}
+.pc-content{position:absolute;bottom:0;left:0;right:0;padding:16px}
+.pc-tag{display:inline-flex;align-items:center;gap:4px;background:var(--red);border-radius:2px;padding:2px 7px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;color:white;letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px}
+.pc-title{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:white;line-height:1.05;letter-spacing:-.2px}
+.pc-meta{font-size:10px;color:rgba(255,255,255,.5);margin-top:5px;display:flex;align-items:center;gap:8px}
+.pc-dot{width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,.3)}
+
+/* Photo-realistic hero cards using CSS */
+.img-cowboys{background:linear-gradient(160deg,#0d1a2d 0%,#1a2d45 40%,#0a1020 100%);position:relative;overflow:hidden}
+.img-cowboys::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 70% 30%,rgba(19,35,68,.8),transparent 60%)}
+.img-lakers{background:linear-gradient(160deg,#1a0a2d 0%,#2d1a45 40%,#0a0520 100%);position:relative}
+.img-lakers::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 40%,rgba(85,0,168,.4),transparent 60%)}
+.img-rangers{background:linear-gradient(160deg,#0a1520 0%,#001a2d 40%,#000d1a 100%)}
+
+/* HOMEPAGE SCREEN */
+.hp-screen{position:absolute;inset:52px 0 0;background:var(--dark);display:grid;grid-template-columns:1fr 320px;opacity:0;transition:opacity .6s ease;pointer-events:none}
+.hp-screen.active{opacity:1;pointer-events:all}
+
+.hp-top-bar{position:absolute;top:0;left:0;right:320px;height:38px;background:var(--mid);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:8px;z-index:5}
+.tb-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.tb-team{background:var(--card);border:1px solid var(--border);border-radius:3px;padding:3px 10px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.04em;cursor:pointer;transition:all .2s}
+.tb-team.act{background:var(--red);border-color:var(--red);color:white}
+.tb-right{margin-left:auto;font-size:10px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.tb-live-dot{width:5px;height:5px;border-radius:50%;background:var(--green)}
+
+.hp-main{padding:50px 20px 16px;overflow:hidden;display:flex;flex-direction:column;gap:14px}
+
+.since-alert{background:#0f1e0f;border:1px solid rgba(34,197,94,.25);border-left:3px solid var(--green);border-radius:4px;padding:10px 14px;display:flex;align-items:center;gap:10px;opacity:0;transform:translateY(-6px);transition:opacity .4s,transform .4s}
+.since-alert.show{opacity:1;transform:translateY(0)}
+.sa-icon{width:20px;height:20px;border-radius:50%;background:rgba(34,197,94,.15);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+.sa-text{font-size:12px;color:rgba(255,255,255,.8);line-height:1.4}
+.sa-text strong{color:var(--green)}
+.sa-badge{margin-left:auto;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);border-radius:20px;padding:2px 8px;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;color:var(--green);white-space:nowrap;letter-spacing:.04em}
+
+.hero-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:10px;height:210px}
+.hc{border-radius:6px;overflow:hidden;position:relative;cursor:pointer;opacity:0;transform:translateY(12px);transition:opacity .5s,transform .5s}
+.hc.show{opacity:1;transform:translateY(0)}
+.hc::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.96) 0%,rgba(0,0,0,.6) 45%,rgba(0,0,0,.1) 100%)}
+.hc-bg{position:absolute;inset:0;transition:transform .4s ease}
+.hc:hover .hc-bg{transform:scale(1.03)}
+.hc-content{position:absolute;bottom:0;left:0;right:0;padding:14px;z-index:2}
+.hc-sport{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.hc-sport::before{content:'';width:12px;height:1px;background:var(--red)}
+.hc-title{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:white;line-height:1.05;letter-spacing:-.2px}
+.hc.large .hc-title{font-size:22px}
+.hc-meta{font-size:10px;color:rgba(255,255,255,.45);margin-top:5px}
+
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sh-title{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.sh-link{font-size:11px;color:var(--red);font-weight:500}
+
+.story-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.story{cursor:pointer;opacity:0;transform:translateY(8px);transition:opacity .4s,transform .4s}
+.story.show{opacity:1;transform:translateY(0)}
+.story-img{height:80px;border-radius:4px;margin-bottom:8px;position:relative;overflow:hidden}
+.story-img-bg{position:absolute;inset:0}
+.story-sport{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--red);margin-bottom:4px}
+.story-title{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:white;line-height:1.2;letter-spacing:-.1px}
+.story-byline{font-size:10px;color:var(--muted);margin-top:3px}
+
+/* VAULT SECTION */
+.vault-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.vault-card{display:flex;gap:8px;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:4px;padding:8px;opacity:0;transform:translateX(-6px);transition:opacity .4s,transform .4s;cursor:pointer}
+.vault-card.show{opacity:1;transform:translateX(0)}
+.vc-thumb{width:36px;height:44px;border-radius:2px;flex-shrink:0}
+.vc-year{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--red);margin-bottom:2px}
+.vc-title{font-size:10px;font-weight:500;color:var(--text);line-height:1.3}
+
+/* SIDEBAR */
+.hp-sidebar{border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;background:var(--mid)}
+
+.sidebar-section{padding:14px;border-bottom:1px solid var(--border)}
+.ss-header{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.ss-live{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--green)}
+.ss-live-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.game-item{padding:9px 0;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px}
+.game-item:last-child{border-bottom:none}
+.gi-match{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:white;letter-spacing:-.1px}
+.gi-match.your-team{color:white}
+.gi-sub{font-size:10px;color:var(--muted);margin-top:1px}
+.gi-vote{text-align:right}
+.gi-pct{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--red)}
+.gi-label{font-size:9px;color:var(--muted)}
+
+.vote-bar-wrap{height:2px;background:var(--border);border-radius:1px;margin-top:4px;overflow:hidden}
+.vote-bar-fill{height:100%;border-radius:1px;transition:width 1.2s ease;width:0%}
+
+/* PASSPORT SIDEBAR WIDGET */
+.passport-widget{padding:14px}
+.pw-user{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.pw-av{width:38px;height:38px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:white;border:2px solid rgba(193,39,45,.3);flex-shrink:0}
+.pw-name{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:white;letter-spacing:-.2px}
+.pw-tier{font-size:10px;color:var(--gold);font-weight:500;display:flex;align-items:center;gap:4px}
+.pw-tier::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--gold)}
+.tier-row{display:flex;gap:3px;margin-bottom:8px}
+.tier-seg{flex:1;padding:5px 3px;text-align:center;border-radius:3px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.ts-done{background:#1a0304;border:1px solid #3a0a0a;color:#5a1a1a}
+.ts-now{background:var(--red);color:white}
+.ts-next{background:var(--card);border:1px solid var(--border);color:var(--muted)}
+.progress-track{height:3px;background:var(--border);border-radius:2px;margin-bottom:6px;overflow:hidden}
+.progress-fill{height:100%;background:var(--red);border-radius:2px;transition:width 1.4s cubic-bezier(.4,0,.2,1);width:0%}
+.pw-pts{font-size:10px;color:var(--muted);margin-bottom:10px}
+.pw-perks{display:flex;flex-direction:column;gap:5px}
+.perk{display:flex;align-items:center;gap:7px;font-size:11px}
+.perk-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.pd-on{background:var(--red)}
+.pd-off{background:var(--border)}
+.perk-text{color:var(--text)}
+.perk-text.off{color:var(--muted)}
+
+/* ANNOTATION TOOLTIP */
+.ann{position:absolute;background:white;color:#111;font-family:'Barlow',sans-serif;font-size:12px;font-weight:600;padding:7px 13px;border-radius:5px;pointer-events:none;opacity:0;transition:opacity .3s ease;white-space:nowrap;z-index:100;letter-spacing:-.1px}
+.ann::after{content:'';position:absolute;left:14px;bottom:-6px;border:6px solid transparent;border-top-color:white;border-bottom:0}
+.ann.show{opacity:1}
+.ann.bottom::after{display:none}
+.ann.bottom::before{content:'';position:absolute;left:14px;top:-6px;border:6px solid transparent;border-bottom-color:white;border-top:0}
+
+/* PHOTO SIM — CSS painted scenes */
+.photo-cowboys{background:#0d1521;position:relative;overflow:hidden}
+.photo-cowboys::before{content:'';position:absolute;right:-10px;top:-10px;width:140px;height:260px;background:linear-gradient(135deg,#c8a028 0%,#8b6014 50%,transparent 100%);opacity:.12;transform:skewX(-8deg)}
+.photo-cowboys::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 65% 30%,rgba(100,160,255,.06),transparent 55%)}
+.photo-lakers{background:#100820;position:relative;overflow:hidden}
+.photo-lakers::before{content:'';position:absolute;right:0;top:0;bottom:0;width:60%;background:linear-gradient(90deg,transparent,rgba(130,0,200,.08))}
+.photo-rangers{background:#010d18;position:relative}
+.photo-rangers::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 40% 60%,rgba(0,60,120,.2),transparent 60%)}
+.photo-vault1{background:linear-gradient(135deg,#1a0500,#0d0300)}
+.photo-vault2{background:linear-gradient(135deg,#00101a,#000810)}
+.photo-vault3{background:linear-gradient(135deg,#00040d,#000210)}
+.photo-story1{background:linear-gradient(160deg,#0a1624,#0d1e30)}
+.photo-story2{background:linear-gradient(160deg,#0d1a0a,#1a2d10)}
+.photo-story3{background:linear-gradient(160deg,#1a0a0a,#2a0d0d)}
+</style>
+</head>
+<body>
+<div class="scene">
+
+<!-- GLOBAL CURSOR -->
+<div class="cursor" id="cur"></div>
+<div class="cursor-trail" id="trail"></div>
+
+<!-- NAV (always visible) -->
+<div class="nav">
+  <div class="logo">S<span>I</span></div>
+  <div class="nav-items">
+    <div class="ni" id="ni-mysi">My SI</div>
+    <div class="ni">NFL</div><div class="ni">NBA</div><div class="ni">NHL</div>
+    <div class="ni">Pick'em</div><div class="ni">SI TV</div>
+  </div>
+  <div class="nav-right">
+    <div class="passport-badge" id="passportBadge" style="opacity:0">
+      <div class="pb-dot"></div>
+      <div class="pb-text">Insider · 340 pts</div>
+    </div>
+    <div class="nav-avatar">MR</div>
+  </div>
+</div>
+
+<!-- SCREEN 1: ONBOARDING -->
+<div class="ob-screen" id="screen1">
+  <div class="ob-left">
+    <div class="ob-kicker">Step 2 of 3 — Personalise your feed</div>
+    <div class="ob-title">What sports<br>do you follow?</div>
+    <div class="ob-sub">We'll build your personal SI around the sports, teams, and stories that matter to you. Takes 30 seconds.</div>
+    <div class="ob-steps">
+      <div class="ob-step obs-done"></div>
+      <div class="ob-step obs-now"></div>
+      <div class="ob-step" id="step3"></div>
+    </div>
+    <div class="league-grid" id="leagueGrid">
+      <div class="lc" id="l0"><div class="lc-check">✓</div><div class="lc-abbr">NFL</div><div class="lc-name">Football</div></div>
+      <div class="lc" id="l1"><div class="lc-check">✓</div><div class="lc-abbr">NBA</div><div class="lc-name">Basketball</div></div>
+      <div class="lc" id="l2"><div class="lc-check">✓</div><div class="lc-abbr">NHL</div><div class="lc-name">Hockey</div></div>
+      <div class="lc" id="l3"><div class="lc-check">✓</div><div class="lc-abbr">MLB</div><div class="lc-name">Baseball</div></div>
+      <div class="lc" id="l4"><div class="lc-check">✓</div><div class="lc-abbr">CFB</div><div class="lc-name">College FB</div></div>
+      <div class="lc" id="l5"><div class="lc-check">✓</div><div class="lc-abbr">EPL</div><div class="lc-name">Soccer</div></div>
+      <div class="lc" id="l6"><div class="lc-check">✓</div><div class="lc-abbr">WNBA</div><div class="lc-name">Basketball</div></div>
+      <div class="lc" id="l7"><div class="lc-check">✓</div><div class="lc-abbr">MMA</div><div class="lc-name">Combat</div></div>
+    </div>
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Your teams</div>
+    <div class="team-row" id="teamRow">
+      <div class="tc" id="tc0">Cowboys</div><div class="tc" id="tc1">Lakers</div>
+      <div class="tc" id="tc2">Rangers</div><div class="tc" id="tc3">Bruins</div>
+      <div class="tc">Eagles</div><div class="tc">Chiefs</div>
+      <div class="tc">Warriors</div><div class="tc">Celtics</div>
+      <div class="tc">Yankees</div><div class="tc">Knicks</div>
+    </div>
+    <div class="cta" id="ctaBtn">Build my feed →</div>
+  </div>
+  <div class="ob-right">
+    <div class="preview-label">Your feed preview</div>
+    <div class="preview-card" id="pc1" style="transition-delay:.1s">
+      <img class="pc-img" src="https://images.unsplash.com/photo-1552667466-07770ae110d0?w=600&q=80&fit=crop" alt="NFL" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+      <div class="pc-gradient"></div>
+      <div class="pc-content">
+        <div class="pc-tag">Cowboys · Breaking</div>
+        <div class="pc-title">Dallas lands Aiyuk in blockbuster deadline move</div>
+        <div class="pc-meta"><span>Tom Friend</span><div class="pc-dot"></div><span>42 min ago</span></div>
+      </div>
+    </div>
+    <div class="preview-card" id="pc2" style="transition-delay:.25s">
+      <img class="pc-img" src="https://images.unsplash.com/photo-1546519638-68e109498ffc?w=600&q=80&fit=crop" alt="NBA" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+      <div class="pc-gradient"></div>
+      <div class="pc-content">
+        <div class="pc-tag">Lakers · Analysis</div>
+        <div class="pc-title">The three games that explain LA's collapse</div>
+        <div class="pc-meta"><span>Chris Mannix</span><div class="pc-dot"></div><span>2 hrs ago</span></div>
+      </div>
+    </div>
+    <div class="preview-card" id="pc3" style="transition-delay:.4s">
+      <img class="pc-img" src="https://images.unsplash.com/photo-1580748141549-71748dbe0bdc?w=600&q=80&fit=crop" alt="NHL" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+      <div class="pc-gradient"></div>
+      <div class="pc-content">
+        <div class="pc-tag">Rangers · Game day</div>
+        <div class="pc-title">Rangers clinch — full playoff picture</div>
+        <div class="pc-meta"><span>Kevin Hitt</span><div class="pc-dot"></div><span>1 hr ago</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCREEN 2: MY SI HOMEPAGE -->
+<div class="hp-screen" id="screen2">
+  <div style="position:relative;display:flex;flex-direction:column;min-height:0;overflow:hidden">
+    <div class="hp-top-bar">
+      <div class="tb-label">My teams</div>
+      <div class="tb-team act">Cowboys</div>
+      <div class="tb-team act">Lakers</div>
+      <div class="tb-team act">Rangers</div>
+      <div class="tb-team act">Bruins</div>
+      <div class="tb-team" style="border-style:dashed;font-size:10px">+ Add team</div>
+      <div class="tb-right">
+        <div class="tb-live-dot"></div>
+        Personalised · updated 2 min ago
+      </div>
+    </div>
+    <div class="hp-main">
+      <div class="since-alert" id="sinceAlert">
+        <div class="sa-icon">🔔</div>
+        <div class="sa-text">Since your last visit: <strong>Cowboys signed WR</strong> · <strong>Lakers lost 3 straight</strong> · <strong>Rangers clinched playoff spot</strong></div>
+        <div class="sa-badge">3 updates</div>
+      </div>
+      <div class="hero-grid">
+        <div class="hc large" id="hc0" style="transition-delay:.05s">
+          <img style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" src="https://images.unsplash.com/photo-1552667466-07770ae110d0?w=800&q=80&fit=crop" alt="NFL football">
+          <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.95) 0%,rgba(0,0,0,.5) 45%,rgba(0,0,0,.05) 100%)"></div>
+          <div class="hc-content">
+            <div class="hc-sport">Cowboys · Breaking</div>
+            <div class="hc-title">Dallas lands Aiyuk in blockbuster deadline move — what it means</div>
+            <div class="hc-meta">Tom Friend · 42 min ago · 4 min read</div>
+          </div>
+        </div>
+        <div class="hc" id="hc1" style="transition-delay:.12s">
+          <img style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" src="https://images.unsplash.com/photo-1546519638-68e109498ffc?w=600&q=80&fit=crop" alt="NBA basketball"><div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.95) 0%,rgba(0,0,0,.5) 45%,rgba(0,0,0,.05) 100%)"></div>
+          <div class="hc-content">
+            <div class="hc-sport">Lakers · Analysis</div>
+            <div class="hc-title">Three games that explain LA's catastrophic collapse</div>
+            <div class="hc-meta">Chris Mannix · 2 hrs ago</div>
+          </div>
+        </div>
+        <div class="hc" id="hc2" style="transition-delay:.2s">
+          <img style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" src="https://images.unsplash.com/photo-1580748141549-71748dbe0bdc?w=600&q=80&fit=crop" alt="NHL hockey"><div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.95) 0%,rgba(0,0,0,.5) 45%,rgba(0,0,0,.05) 100%)"></div>
+          <div class="hc-content">
+            <div class="hc-sport">Rangers · Game day</div>
+            <div class="hc-title">Rangers clinch — full bracket picture emerging</div>
+            <div class="hc-meta">Kevin Hitt · 1 hr ago</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="section-header">
+          <div class="sh-title">Top stories for you</div>
+          <div class="sh-link">See all →</div>
+        </div>
+        <div class="story-row">
+          <div class="story" id="st0">
+            <div class="story-img"><img style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" src="https://images.unsplash.com/photo-1560272564-c83b66b1ad12?w=400&q=80&fit=crop" alt="Cowboys"></div>
+            <div class="story-sport">Cowboys</div>
+            <div class="story-title">How Aiyuk changes the Cowboys' offensive identity</div>
+            <div class="story-byline">Tom Friend · 4 hrs ago</div>
+          </div>
+          <div class="story" id="st1" style="transition-delay:.08s">
+            <div class="story-img"><img style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" src="https://images.unsplash.com/photo-1519861531473-9200262188bf?w=400&q=80&fit=crop" alt="Rangers"></div>
+            <div class="story-sport">Rangers</div>
+            <div class="story-title">Rangers clinch — what this means for the Stanley Cup race</div>
+            <div class="story-byline">Kevin Hitt · 1 hr ago</div>
+          </div>
+          <div class="story" id="st2" style="transition-delay:.16s">
+            <div class="story-img"><img style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;" src="https://images.unsplash.com/photo-1504450758481-7338eba7524a?w=400&q=80&fit=crop" alt="Lakers"></div>
+            <div class="story-sport">Lakers</div>
+            <div class="story-title">LeBron's shooting slump: the data, context, and what comes next</div>
+            <div class="story-byline">Chris Mannix · 6 hrs ago</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="section-header">
+          <div class="sh-title">SI Vault — your teams in history</div>
+          <div class="sh-link">Explore 70 years →</div>
+        </div>
+        <div class="vault-row">
+          <div class="vault-card" id="vc0">
+            <div class="vc-thumb" style="background:#1a0500;overflow:hidden;position:relative"></div>
+            <div><div class="vc-year">Cowboys · Jan 1993</div><div class="vc-title">America's Team — the dynasty that changed everything</div></div>
+          </div>
+          <div class="vault-card" id="vc1" style="transition-delay:.1s">
+            <div class="vc-thumb" style="background:#00101a;overflow:hidden;position:relative"></div>
+            <div><div class="vc-year">Lakers · Jun 2000</div><div class="vc-title">Shaq and Kobe's coronation night</div></div>
+          </div>
+          <div class="vault-card" id="vc2" style="transition-delay:.2s">
+            <div class="vc-thumb" style="background:#00040d;overflow:hidden;position:relative"></div>
+            <div><div class="vc-year">Rangers · May 1994</div><div class="vc-title">54 years of waiting — the night it finally ended</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="hp-sidebar">
+    <div class="sidebar-section">
+      <div class="ss-header">
+        Tonight's games
+        <span class="ss-live"><div class="ss-live-dot"></div>Live</span>
+      </div>
+      <div class="game-item">
+        <div>
+          <div class="gi-match your-team">Lakers vs Celtics</div>
+          <div class="gi-sub">ESPN · 8:30pm ET · Your team</div>
+          <div class="vote-bar-wrap"><div class="vote-bar-fill" id="vb0" style="background:var(--red)"></div></div>
+        </div>
+        <div class="gi-vote"><div class="gi-pct">57%</div><div class="gi-label">pick LAL</div></div>
+      </div>
+      <div class="game-item">
+        <div>
+          <div class="gi-match" style="color:var(--sub)">Rangers vs Capitals</div>
+          <div class="gi-sub">ESPN+ · 7:00pm ET</div>
+          <div class="vote-bar-wrap"><div class="vote-bar-fill" id="vb1" style="background:#185FA5"></div></div>
+        </div>
+        <div class="gi-vote"><div class="gi-pct" style="color:#185FA5">62%</div><div class="gi-label">pick NYR</div></div>
+      </div>
+      <div class="game-item">
+        <div>
+          <div class="gi-match" style="color:var(--sub)">Knicks vs Heat</div>
+          <div class="gi-sub">TNT · 7:30pm ET</div>
+          <div class="vote-bar-wrap"><div class="vote-bar-fill" id="vb2" style="background:#555"></div></div>
+        </div>
+        <div class="gi-vote"><div class="gi-pct" style="color:var(--muted)">44%</div><div class="gi-label">pick NYK</div></div>
+      </div>
+    </div>
+
+    <div class="passport-widget">
+      <div class="ss-header" style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">SI Fan Passport</div>
+      <div class="pw-user">
+        <div class="pw-av">MR</div>
+        <div>
+          <div class="pw-name">Marcus Rivera</div>
+          <div class="pw-tier">Insider · 340 pts</div>
+        </div>
+      </div>
+      <div class="tier-row">
+        <div class="tier-seg ts-done">Reader</div>
+        <div class="tier-seg ts-now">Insider</div>
+        <div class="tier-seg ts-next">Legend</div>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="pgFill"></div></div>
+      <div class="pw-pts">340 / 500 pts to Legend</div>
+      <div class="pw-perks">
+        <div class="perk"><div class="perk-dot pd-on"></div><div class="perk-text">SI Tickets early access</div></div>
+        <div class="perk"><div class="perk-dot pd-on"></div><div class="perk-text">Players' Tribune exclusives</div></div>
+        <div class="perk"><div class="perk-dot pd-on"></div><div class="perk-text">Full SI Vault archive</div></div>
+        <div class="perk"><div class="perk-dot pd-off"></div><div class="perk-text off">Club SI events (Legend)</div></div>
+        <div class="perk"><div class="perk-dot pd-off"></div><div class="perk-text off">Athlete Q&As (Legend)</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ANNOTATIONS -->
+<div class="ann" id="an1" style="left:120px;top:270px">Select your leagues — we'll personalise everything</div>
+<div class="ann" id="an2" style="left:120px;top:430px">Pick your teams — your homepage will reflect them</div>
+<div class="ann" id="an3" style="right:350px;top:95px;left:auto">Your personalised feed — built from your selections</div>
+<div class="ann bottom" id="an4" style="left:120px;top:140px">Since your last visit — every session starts with context</div>
+<div class="ann bottom" id="an5" style="left:120px;top:380px">Stories matched to Cowboys, Lakers, Rangers, Bruins only</div>
+<div class="ann bottom" id="an6" style="left:120px;top:540px">SI Vault — 70 years of archive matched to your teams</div>
+<div class="ann bottom" id="an7" style="left:700px;top:420px;left:auto;right:10px">Fan Passport — engagement earns real-world SI perks</div>
+
+</div><!-- end scene -->
+
+<script>
+// ── CURSOR ─────────────────────────────────────────────────────────────
+const cur=document.getElementById('cur'),trail=document.getElementById('trail');
+let mx=200,my=300,tx=200,ty=300;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px'});
+setInterval(()=>{tx+=(mx-tx)*.18;ty+=(my-ty)*.18;trail.style.left=tx+'px';trail.style.top=ty+'px'},16);
+
+// ── HELPERS ────────────────────────────────────────────────────────────
+let animX=200,animY=300;
+function mv(x,y,d){return new Promise(r=>{const steps=Math.ceil(d/16),dx=(x-animX)/steps,dy=(y-animY)/steps;let i=0;const t=setInterval(()=>{animX+=dx;animY+=dy;cur.style.left=animX+'px';cur.style.top=animY+'px';mx=animX;my=animY;if(++i>=steps){animX=x;animY=y;clearInterval(t);setTimeout(r,60)}},16)})}
+function ck(){return new Promise(r=>{cur.classList.add('clicking');setTimeout(()=>{cur.classList.remove('clicking');r()},220)})}
+function wt(ms){return new Promise(r=>setTimeout(r,ms))}
+function show(id){const el=document.getElementById(id);if(el)el.classList.add('show')}
+function hide(id){const el=document.getElementById(id);if(el)el.classList.remove('show')}
+function sel(id){const el=document.getElementById(id);if(el)el.classList.add('sel')}
+function showAnn(id,dur){show(id);return wt(dur).then(()=>hide(id))}
+function screen(s1,s2){
+  document.getElementById('screen1').classList.toggle('active',s1);
+  document.getElementById('screen2').classList.toggle('active',s2);
+  const ni=document.getElementById('ni-mysi');
+  ni.classList.toggle('act',s2);
+}
+
+async function run(){
+  screen(true,false);
+  await wt(600);
+
+  // SELECT LEAGUES
+  showAnn('an1',3500);
+  const lPos=[
+    [100,270],[280,270],[460,270],[640,270],
+    [100,350],[280,350],[460,350],[640,350]
+  ];
+  const toSel=[0,1,2,4];
+  for(const i of toSel){
+    await mv(lPos[i][0],lPos[i][1],700);
+    await ck();
+    sel('l'+i);
+    await wt(350);
+  }
+  await wt(300);
+
+  // SELECT TEAMS
+  showAnn('an2',3500);
+  const teamX=[96,162,230,298];
+  for(let i=0;i<4;i++){
+    await mv(teamX[i],426,350);
+    await ck();
+    sel('tc'+i);
+    await wt(160);
+  }
+  await wt(400);
+
+  // Preview cards appear
+  show('pc1');await wt(350);show('pc2');await wt(350);show('pc3');
+  await wt(600);
+
+  // Show step 3 progress
+  document.getElementById('step3').className='ob-step obs-now';
+
+  // CTA
+  showAnn('an3',3200);
+  await mv(200,535,700);
+  await wt(200);
+  document.getElementById('ctaBtn').classList.add('press');
+  await ck();
+  await wt(300);
+  document.getElementById('ctaBtn').classList.remove('press');
+  await wt(400);
+
+  // TRANSITION TO HOMEPAGE
+  screen(false,true);
+  document.getElementById('passportBadge').style.opacity='1';
+  await wt(200);
+
+  // Reveal homepage elements
+  showAnn('an4',2200);
+  show('sinceAlert');
+  await wt(300);
+  show('hc0');await wt(120);show('hc1');await wt(120);show('hc2');
+  await wt(700);
+
+  showAnn('an5',2200);
+  show('st0');await wt(100);show('st1');await wt(100);show('st2');
+  await wt(800);
+
+  showAnn('an6',2200);
+  show('vc0');await wt(120);show('vc1');await wt(120);show('vc2');
+  await wt(600);
+
+  // Vote bars animate
+  document.getElementById('vb0').style.width='57%';
+  document.getElementById('vb1').style.width='62%';
+  document.getElementById('vb2').style.width='44%';
+
+  // Passport fills
+  showAnn('an7',3800);
+  await mv(1100,420,900);
+  document.getElementById('pgFill').style.width='68%';
+  await wt(1600);
+
+  // Browse hero cards
+  await mv(350,260,800);
+  await wt(300);
+  await mv(600,260,500);
+  await wt(300);
+  await mv(820,260,500);
+  await wt(600);
+
+  // Vault hover
+  await mv(300,580,700);
+  await wt(400);
+  await mv(580,580,500);
+  await wt(800);
+
+  // RESET
+  await wt(600);
+  ['sinceAlert','hc0','hc1','hc2','st0','st1','st2','vc0','vc1','vc2','pc1','pc2','pc3'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.classList.remove('show')}
+  });
+  ['l0','l1','l2','l4','tc0','tc1','tc2','tc3'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.classList.remove('sel');
+  });
+  document.getElementById('step3').className='ob-step';
+  document.getElementById('pgFill').style.width='0%';
+  document.getElementById('vb0').style.width='0%';
+  document.getElementById('vb1').style.width='0%';
+  document.getElementById('vb2').style.width='0%';
+  document.getElementById('passportBadge').style.opacity='0';
+
+  run();
+}
+
+window.onload=()=>setTimeout(run,500);
+</script>
+</body>
+</html>

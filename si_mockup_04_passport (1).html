@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SI — Fan Passport · Tiered Loyalty</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--red:#C1272D;--dark:#080808;--mid:#0e0e0e;--card:#161616;--card2:#1c1c1c;--border:#222;--muted:#555;--text:#e8e8e8;--sub:#888;--gold:#E8A020;--gold2:#FFD060;--green:#22c55e}
+body{font-family:'Barlow',sans-serif;background:var(--dark);color:var(--text);width:1280px;height:720px;overflow:hidden;cursor:none}
+.scene{width:1280px;height:720px;position:relative;overflow:hidden}
+.cursor{position:fixed;width:14px;height:14px;border-radius:50%;background:white;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:transform .15s}
+.cursor.clicking{transform:translate(-50%,-50%) scale(.6)}
+.cursor-ring{position:fixed;width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.2);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:left .1s,top .1s}
+
+/* NAV */
+.nav{height:48px;background:var(--dark);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:0}
+.logo{font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:900;color:white;margin-right:24px;letter-spacing:-1px;font-style:italic}
+.logo span{color:var(--red)}
+.ni{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:0 12px;height:48px;display:flex;align-items:center;border-bottom:2px solid transparent;transition:all .2s}
+.ni.act{color:white;border-bottom-color:var(--gold)}
+.nav-r{margin-left:auto;display:flex;align-items:center;gap:8px}
+.passport-nav{display:flex;align-items:center;gap:6px;background:linear-gradient(135deg,rgba(232,160,32,.12),rgba(232,160,32,.06));border:1px solid rgba(232,160,32,.3);border-radius:4px;padding:5px 12px}
+.pn-dot{width:6px;height:6px;border-radius:50%;background:var(--gold)}
+.pn-text{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.06em}
+.nav-av{width:30px;height:30px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;color:white}
+
+/* PASSPORT HERO */
+.passport-hero{background:linear-gradient(135deg,#0d0d0d 0%,#111 50%,#0a0808 100%);border-bottom:1px solid var(--border);padding:0 28px;height:96px;display:flex;align-items:center;justify-content:space-between;position:relative;overflow:hidden}
+.passport-hero::before{content:'';position:absolute;right:0;top:0;bottom:0;width:500px;background:linear-gradient(90deg,transparent,rgba(232,160,32,.04));pointer-events:none}
+.passport-hero::after{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--red),var(--gold))}
+.ph-left{display:flex;align-items:center;gap:16px}
+.ph-avatar{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--red),#8b0000);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:white;border:2px solid rgba(193,39,45,.4);flex-shrink:0;position:relative}
+.ph-avatar::after{content:'';position:absolute;inset:-4px;border-radius:50%;border:1px solid rgba(232,160,32,.2)}
+.ph-kicker{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--red);margin-bottom:3px}
+.ph-name{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:white;line-height:1;letter-spacing:-.5px;margin-bottom:4px}
+.ph-meta{font-size:11px;color:var(--muted);display:flex;gap:12px}
+.ph-meta-item{display:flex;align-items:center;gap:5px}
+.ph-meta-dot{width:3px;height:3px;border-radius:50%;background:var(--border)}
+.tier-badge{background:linear-gradient(135deg,rgba(232,160,32,.1),rgba(232,160,32,.05));border:1px solid rgba(232,160,32,.35);border-radius:6px;padding:12px 20px;text-align:center;position:relative}
+.tier-badge::before{content:'';position:absolute;inset:0;border-radius:6px;background:linear-gradient(135deg,transparent 50%,rgba(232,160,32,.04))}
+.tb-label{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.tb-tier{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--gold2);letter-spacing:-.5px;line-height:1}
+.tb-pts{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* TIER TRACK */
+.tier-track{background:var(--mid);border-bottom:1px solid var(--border);padding:0 28px;display:grid;grid-template-columns:repeat(4,1fr);height:56px}
+.tt-seg{display:flex;align-items:center;justify-content:center;gap:10px;border-right:1px solid var(--border);position:relative}
+.tt-seg:last-child{border-right:none}
+.tt-seg.done{background:rgba(193,39,45,.04)}
+.tt-seg.now{background:rgba(193,39,45,.08)}
+.tt-num{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;line-height:1}
+.tt-num.done{color:rgba(193,39,45,.35)}
+.tt-num.now{color:var(--red)}
+.tt-num.next{color:rgba(255,255,255,.1)}
+.tt-info{}
+.tt-name{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;line-height:1;margin-bottom:1px}
+.tt-name.done{color:var(--muted)}
+.tt-name.now{color:white}
+.tt-name.next{color:rgba(255,255,255,.2)}
+.tt-pts-label{font-size:9px}
+.tt-pts-label.done{color:rgba(193,39,45,.4)}
+.tt-pts-label.now{color:var(--red)}
+.tt-pts-label.next{color:rgba(255,255,255,.15)}
+.now-indicator{position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--red),transparent)}
+
+/* PROGRESS */
+.progress-row{background:var(--mid);border-bottom:1px solid var(--border);padding:8px 28px;display:flex;align-items:center;gap:14px}
+.pr-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.pr-track{flex:1;height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.pr-fill{height:100%;background:linear-gradient(90deg,var(--red),var(--gold));border-radius:2px;transition:width 1.6s cubic-bezier(.4,0,.2,1);width:0%}
+.pr-pts{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:var(--gold);white-space:nowrap}
+
+/* MAIN LAYOUT */
+.main{display:grid;grid-template-columns:1fr 1fr 1fr;height:calc(720px - 48px - 96px - 56px - 36px)}
+
+.col{border-right:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column}
+.col:last-child{border-right:none}
+.col-hdr{padding:10px 16px;border-bottom:1px solid var(--border);font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);flex-shrink:0}
+.col-body{padding:12px 16px;overflow:hidden;flex:1;display:flex;flex-direction:column;gap:8px}
+
+/* PERKS */
+.perk-group{margin-bottom:6px}
+.pg-label{display:flex;align-items:center;gap:6px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.pg-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.perk-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:4px;border:1px solid;margin-bottom:4px;opacity:0;transform:translateX(-8px);transition:opacity .4s,transform .4s}
+.perk-item.show{opacity:1;transform:translateX(0)}
+.pi-unlocked{background:rgba(193,39,45,.06);border-color:rgba(193,39,45,.2)}
+.pi-locked{background:rgba(255,255,255,.02);border-color:var(--border)}
+.pi-icon{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;font-family:'Barlow Condensed',sans-serif}
+.pii-on{background:var(--red);color:white}
+.pii-off{background:rgba(255,255,255,.06);color:var(--muted)}
+.pi-content{}
+.pi-title{font-size:11px;font-weight:500;line-height:1.2;margin-bottom:1px}
+.pit-on{color:var(--text)}
+.pit-off{color:var(--muted)}
+.pi-desc{font-size:9px;color:var(--muted)}
+.pi-unlock-label{font-size:9px;color:rgba(255,255,255,.2)}
+
+/* BADGES */
+.badge-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.badge{border-radius:5px;padding:10px 6px;text-align:center;border:1px solid;opacity:0;transform:scale(.85);transition:opacity .35s,transform .35s}
+.badge.show{opacity:1;transform:scale(1)}
+.bg-on{background:rgba(193,39,45,.08);border-color:rgba(193,39,45,.2)}
+.bg-off{background:rgba(255,255,255,.02);border-color:var(--border)}
+.b-icon-wrap{width:32px;height:32px;border-radius:50%;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.biw-on{background:rgba(193,39,45,.2)}
+.biw-off{background:rgba(255,255,255,.05)}
+.b-name{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;letter-spacing:-.1px}
+.bn-on{color:white}
+.bn-off{color:rgba(255,255,255,.25)}
+.b-sub{font-size:9px;margin-top:1px}
+.bs-on{color:var(--muted)}
+.bs-off{color:rgba(255,255,255,.1)}
+
+/* ACTIVITY FEED */
+.activity{display:flex;flex-direction:column;gap:0;flex:1;overflow:hidden}
+.ai{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);opacity:0;transform:translateY(5px);transition:opacity .35s,transform .35s}
+.ai:last-child{border-bottom:none}
+.ai.show{opacity:1;transform:translateY(0)}
+.ai-dot{width:7px;height:7px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.ai-body{flex:1}
+.ai-text{font-size:11px;color:var(--text);line-height:1.3}
+.ai-time{font-size:9px;color:var(--muted);margin-top:2px}
+.ai-pts{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--red);white-space:nowrap;margin-top:3px}
+
+/* PROFILE */
+.team-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.tc{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:3px;padding:4px 10px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.04em}
+
+.streak-box{background:var(--card);border:1px solid var(--border);border-radius:5px;padding:10px 12px;margin-bottom:10px}
+.sb-label{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.sb-dots{display:flex;gap:3px}
+.sd{width:20px;height:20px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:800;transition:transform .3s cubic-bezier(.34,1.56,.64,1),background .3s}
+.sd-active{background:var(--red);color:white;transform:scale(0)}
+.sd-active.pop{transform:scale(1)}
+.sd-future{background:rgba(255,255,255,.04);border:1px dashed var(--border);color:var(--border)}
+
+.earn-table{border:1px solid var(--border);border-radius:5px;overflow:hidden;flex:1}
+.et-hdr{background:rgba(255,255,255,.03);border-bottom:1px solid var(--border);padding:8px 12px;font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.et-row{padding:6px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;opacity:0;transform:translateX(6px);transition:opacity .3s,transform .3s}
+.et-row:last-child{border-bottom:none}
+.et-row.show{opacity:1;transform:translateX(0)}
+.et-action{font-size:11px;color:var(--text)}
+.et-pts{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;color:var(--red)}
+
+/* LEVEL UP OVERLAY */
+.levelup-overlay{position:absolute;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:200;opacity:0;transition:opacity .4s;pointer-events:none}
+.levelup-overlay.show{opacity:1}
+.levelup-card{background:linear-gradient(135deg,#1a0d00,#0d0800);border:1px solid rgba(232,160,32,.5);border-radius:10px;padding:36px 48px;text-align:center;transform:scale(0);transition:transform .5s cubic-bezier(.34,1.56,.64,1)}
+.levelup-overlay.show .levelup-card{transform:scale(1)}
+.lu-kicker{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+.lu-title{font-family:'Barlow Condensed',sans-serif;font-size:48px;font-weight:900;color:white;line-height:1;letter-spacing:-1px;margin-bottom:6px}
+.lu-title span{color:var(--gold2)}
+.lu-sub{font-size:14px;color:var(--sub);margin-bottom:20px}
+.lu-perks{display:flex;gap:10px;justify-content:center}
+.lu-perk{background:rgba(232,160,32,.08);border:1px solid rgba(232,160,32,.2);border-radius:4px;padding:8px 14px;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--gold);letter-spacing:.04em}
+
+.ann{position:absolute;background:white;color:#111;font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;padding:6px 12px;border-radius:4px;pointer-events:none;opacity:0;transition:opacity .3s;white-space:nowrap;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,.5)}
+.ann::after{content:'';position:absolute;left:12px;bottom:-5px;border:5px solid transparent;border-top-color:white;border-bottom:0}
+.ann.show{opacity:1}
+.ann.up::after{display:none}
+.ann.up::before{content:'';position:absolute;left:12px;top:-5px;border:5px solid transparent;border-bottom-color:white;border-top:0}
+</style>
+</head>
+<body>
+<div class="scene">
+<div class="cursor" id="cur"></div>
+<div class="cursor-ring" id="ring"></div>
+
+<!-- NAV -->
+<div class="nav">
+  <div class="logo">S<span>I</span></div>
+  <div class="ni">My SI</div><div class="ni">NFL</div>
+  <div class="ni">Pick'em</div>
+  <div class="ni act">Fan Passport</div>
+  <div class="nav-r">
+    <div class="passport-nav"><div class="pn-dot"></div><div class="pn-text">Insider · 340 pts</div></div>
+    <div class="nav-av">MR</div>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="passport-hero">
+  <div class="ph-left">
+    <div class="ph-avatar">MR</div>
+    <div>
+      <div class="ph-kicker">SI Fan Passport</div>
+      <div class="ph-name">Marcus Rivera</div>
+      <div class="ph-meta">
+        <div class="ph-meta-item">Cowboys · Lakers · Rangers · Bruins</div>
+        <div class="ph-meta-dot"></div>
+        <div class="ph-meta-item">Member since March 2024</div>
+        <div class="ph-meta-dot"></div>
+        <div class="ph-meta-item">11-week visit streak</div>
+      </div>
+    </div>
+  </div>
+  <div class="tier-badge">
+    <div class="tb-label">Current tier</div>
+    <div class="tb-tier" id="tierName">Insider</div>
+    <div class="tb-pts" id="tierPts">340 / 500 pts</div>
+  </div>
+</div>
+
+<!-- TIER TRACK -->
+<div class="tier-track">
+  <div class="tt-seg done">
+    <div class="tt-num done">01</div>
+    <div class="tt-info">
+      <div class="tt-name done">Reader</div>
+      <div class="tt-pts-label done">0–100 pts · Complete</div>
+    </div>
+  </div>
+  <div class="tt-seg now">
+    <div class="now-indicator"></div>
+    <div class="tt-num now">02</div>
+    <div class="tt-info">
+      <div class="tt-name now">Insider</div>
+      <div class="tt-pts-label now">100–500 pts · You are here</div>
+    </div>
+  </div>
+  <div class="tt-seg" id="captainSeg">
+    <div class="tt-num next" id="captainNum">03</div>
+    <div class="tt-info">
+      <div class="tt-name next" id="captainName">Captain</div>
+      <div class="tt-pts-label next" id="captainPts">500–1,000 pts</div>
+    </div>
+  </div>
+  <div class="tt-seg">
+    <div class="tt-num next">04</div>
+    <div class="tt-info">
+      <div class="tt-name next">Legend</div>
+      <div class="tt-pts-label next">1,000+ pts</div>
+    </div>
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div class="progress-row">
+  <div class="pr-label">Progress to Captain</div>
+  <div class="pr-track"><div class="pr-fill" id="prFill"></div></div>
+  <div class="pr-pts" id="prPts">340 / 500 pts</div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- COL 1: PERKS -->
+  <div class="col">
+    <div class="col-hdr">Your perks — unlocked and upcoming</div>
+    <div class="col-body">
+      <div class="perk-group">
+        <div class="pg-label"><div class="pg-dot" style="background:var(--muted)"></div><span style="color:var(--muted)">Reader — complete</span></div>
+        <div class="perk-item pi-unlocked" id="p0"><div class="pi-icon pii-on">✓</div><div class="pi-content"><div class="pi-title pit-on">Personalised My SI homepage</div><div class="pi-desc">Your feed, your teams, your alerts — always</div></div></div>
+        <div class="perk-item pi-unlocked" id="p1"><div class="pi-icon pii-on">✓</div><div class="pi-content"><div class="pi-title pit-on">SI Pick'em access</div><div class="pi-desc">Weekly predictions and SI community leaderboard</div></div></div>
+      </div>
+      <div class="perk-group">
+        <div class="pg-label"><div class="pg-dot" style="background:var(--red)"></div><span style="color:white">Insider — your current perks</span></div>
+        <div class="perk-item pi-unlocked" id="p2"><div class="pi-icon pii-on">✓</div><div class="pi-content"><div class="pi-title pit-on">SI Tickets early access</div><div class="pi-desc">Priority window 24hrs before public sale opens</div></div></div>
+        <div class="perk-item pi-unlocked" id="p3"><div class="pi-icon pii-on">✓</div><div class="pi-content"><div class="pi-title pit-on">Players' Tribune exclusives</div><div class="pi-desc">First-person athlete content unlocked for your teams</div></div></div>
+        <div class="perk-item pi-unlocked" id="p4"><div class="pi-icon pii-on">✓</div><div class="pi-content"><div class="pi-title pit-on">SI Vault — full archive</div><div class="pi-desc">70 years of SI matched to your followed teams</div></div></div>
+      </div>
+      <div class="perk-group">
+        <div class="pg-label"><div class="pg-dot" style="background:var(--border)"></div><span style="color:rgba(255,255,255,.25)">Captain + Legend — coming next</span></div>
+        <div class="perk-item pi-locked" id="p5"><div class="pi-icon pii-off" id="p5icon">🔒</div><div class="pi-content"><div class="pi-title pit-off" id="p5title">Club SI event invitations</div><div class="pi-unlock-label" id="p5label">Unlocks at Captain · 500 pts</div></div></div>
+        <div class="perk-item pi-locked" id="p6"><div class="pi-icon pii-off">🔒</div><div class="pi-content"><div class="pi-title pit-off">Athlete Q&As — live sessions</div><div class="pi-unlock-label">Unlocks at Legend · 1,000 pts</div></div></div>
+        <div class="perk-item pi-locked" id="p7"><div class="pi-icon pii-off">🔒</div><div class="pi-content"><div class="pi-title pit-off">Sportsperson of the Year invite</div><div class="pi-unlock-label">Unlocks at Legend · 1,000 pts</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COL 2: BADGES + ACTIVITY -->
+  <div class="col">
+    <div class="col-hdr">Badges + recent activity</div>
+    <div class="col-body">
+      <div class="badge-grid">
+        <div class="badge bg-on" id="b0"><div class="b-icon-wrap biw-on">🏈</div><div class="b-name bn-on">NFL Expert</div><div class="b-sub bs-on">68% accuracy</div></div>
+        <div class="badge bg-on" id="b1"><div class="b-icon-wrap biw-on">🔥</div><div class="b-name bn-on">11-wk streak</div><div class="b-sub bs-on">Returning fan</div></div>
+        <div class="badge bg-on" id="b2"><div class="b-icon-wrap biw-on">🎯</div><div class="b-name bn-on">Bold Caller</div><div class="b-sub bs-on">5 bold picks</div></div>
+        <div class="badge bg-off" id="b3"><div class="b-icon-wrap biw-off">🏆</div><div class="b-name bn-off">Pick'em Champ</div><div class="b-sub bs-off">Win a week</div></div>
+        <div class="badge bg-off" id="b4"><div class="b-icon-wrap biw-off">📰</div><div class="b-name bn-off">Vault Historian</div><div class="b-sub bs-off">Read 20 stories</div></div>
+        <div class="badge bg-off" id="b5"><div class="b-icon-wrap biw-off">🎟</div><div class="b-name bn-off">Club SI</div><div class="b-sub bs-off">Attend an event</div></div>
+      </div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding-bottom:6px;border-bottom:1px solid var(--border);flex-shrink:0">Recent activity</div>
+      <div class="activity">
+        <div class="ai" id="a0"><div class="ai-dot" style="background:var(--red)"></div><div class="ai-body"><div class="ai-text">Made 3 picks on Cowboys–Eagles · Week 12</div><div class="ai-time">Today · 11:30am</div></div><div class="ai-pts">+30 pts</div></div>
+        <div class="ai" id="a1"><div class="ai-dot" style="background:var(--green)"></div><div class="ai-body"><div class="ai-text">11-week visit streak milestone — new record</div><div class="ai-time">Yesterday</div></div><div class="ai-pts">+15 pts</div></div>
+        <div class="ai" id="a2"><div class="ai-dot" style="background:var(--red)"></div><div class="ai-body"><div class="ai-text">Voted in 3 game-day polls · Lakers vs Celtics</div><div class="ai-time">Monday</div></div><div class="ai-pts">+10 pts</div></div>
+        <div class="ai" id="a3"><div class="ai-dot" style="background:var(--gold)"></div><div class="ai-body"><div class="ai-text">Bold Caller badge earned — 5th correct bold pick</div><div class="ai-time">Last week</div></div><div class="ai-pts">+25 pts</div></div>
+        <div class="ai" id="a4"><div class="ai-dot" style="background:var(--red)"></div><div class="ai-body"><div class="ai-text">Read Cowboys SI Vault cover · Jan 1993</div><div class="ai-time">Last week</div></div><div class="ai-pts">+5 pts</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COL 3: PROFILE -->
+  <div class="col">
+    <div class="col-hdr">Your profile</div>
+    <div class="col-body">
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Following</div>
+        <div class="team-chips">
+          <div class="tc">Cowboys</div><div class="tc">Lakers</div>
+          <div class="tc">Rangers</div><div class="tc">Bruins</div>
+        </div>
+      </div>
+      <div class="streak-box">
+        <div class="sb-label">Visit streak — 11 consecutive weeks</div>
+        <div class="sb-dots" id="streakDots"></div>
+      </div>
+      <div class="earn-table">
+        <div class="et-hdr">How to earn points</div>
+        <div class="et-row" id="e0"><div class="et-action">Make a Pick'em prediction</div><div class="et-pts">+10</div></div>
+        <div class="et-row" id="e1"><div class="et-action">Correct bold call</div><div class="et-pts">+25</div></div>
+        <div class="et-row" id="e2"><div class="et-action">Vote in game-day poll</div><div class="et-pts">+5</div></div>
+        <div class="et-row" id="e3"><div class="et-action">Weekly visit streak</div><div class="et-pts">+15</div></div>
+        <div class="et-row" id="e4"><div class="et-action">Read SI Vault story</div><div class="et-pts">+5</div></div>
+        <div class="et-row" id="e5"><div class="et-action">Attend SI event</div><div class="et-pts">+100</div></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end main -->
+
+<!-- LEVEL UP OVERLAY -->
+<div class="levelup-overlay" id="levelupOverlay">
+  <div class="levelup-card">
+    <div class="lu-kicker">Tier unlocked</div>
+    <div class="lu-title">Captain <span>status</span></div>
+    <div class="lu-sub">You've earned 500 points. New perks are now available.</div>
+    <div class="lu-perks">
+      <div class="lu-perk">Club SI events</div>
+      <div class="lu-perk">Priority tickets</div>
+      <div class="lu-perk">Exclusive access</div>
+    </div>
+  </div>
+</div>
+
+<div class="ann" id="an1" style="left:200px;top:330px">Every perk uses assets SI already owns — no new build</div>
+<div class="ann" id="an2" style="left:200px;top:490px">Locked perks create aspiration — fans see exactly what's next</div>
+<div class="ann" id="an3" style="left:550px;top:330px">Badges reward engagement depth, not just spending</div>
+<div class="ann" id="an4" style="left:550px;top:490px">Every action earns visible points — the habit loop closes</div>
+<div class="ann up" id="an5" style="left:880px;top:530px">Clear points table makes next action obvious</div>
+<div class="ann" id="an6" style="left:420px;top:200px">Progress bar — 160 pts to Captain. All actions count.</div>
+
+</div><!-- end scene -->
+<script>
+const cur=document.getElementById('cur'),ring=document.getElementById('ring');
+let mx=200,my=300,rx=200,ry=300;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cur.style.left=mx+'px';cur.style.top=my+'px'});
+setInterval(()=>{rx+=(mx-rx)*.12;ry+=(my-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px'},16);
+let ax=200,ay=300;
+function mv(x,y,d){return new Promise(r=>{const st=Math.ceil(d/14),dx=(x-ax)/st,dy=(y-ay)/st;let i=0;const t=setInterval(()=>{ax+=dx;ay+=dy;cur.style.left=ax+'px';cur.style.top=ay+'px';mx=ax;my=ay;if(++i>=st){ax=x;ay=y;clearInterval(t);setTimeout(r,50)}},14)})}
+function ck(){return new Promise(r=>{cur.classList.add('clicking');setTimeout(()=>{cur.classList.remove('clicking');r()},220)})}
+function wt(ms){return new Promise(r=>setTimeout(r,ms))}
+function show(id){document.getElementById(id)?.classList.add('show')}
+function showAnn(id,dur){show(id);return wt(dur).then(()=>document.getElementById(id)?.classList.remove('show'))}
+
+// Build streak dots
+const sd=document.getElementById('streakDots');
+for(let i=0;i<13;i++){
+  const d=document.createElement('div');
+  if(i<11){d.className='sd sd-active';d.id='sd'+i;d.textContent=i+1;}
+  else{d.className='sd sd-future';d.textContent=i+1;}
+  sd.appendChild(d);
+}
+
+async function run(){
+  await wt(500);
+
+  // Progress bar fills
+  showAnn('an6',2200);
+  document.getElementById('prFill').style.width='68%';
+  await wt(1200);
+
+  // Perks reveal
+  showAnn('an1',3800);
+  ['p0','p1','p2','p3','p4','p5','p6','p7'].forEach((id,i)=>setTimeout(()=>show(id),i*110));
+  await wt(1400);
+
+  // Locked perks
+  showAnn('an2',3800);
+  await mv(200,490,700);
+  await wt(1000);
+
+  // Badges
+  showAnn('an3',3800);
+  ['b0','b1','b2','b3','b4','b5'].forEach((id,i)=>setTimeout(()=>show(id),i*120));
+  await wt(1000);
+
+  // Activity feed
+  showAnn('an4',3800);
+  ['a0','a1','a2','a3','a4'].forEach((id,i)=>setTimeout(()=>show(id),i*160));
+  await wt(1200);
+
+  // Streak dots cascade
+  for(let i=0;i<11;i++){
+    setTimeout(()=>document.getElementById('sd'+i)?.classList.add('pop'),i*70);
+  }
+  await wt(1000);
+
+  // Earn table
+  showAnn('an5',3800);
+  await mv(980,460,1200);
+  ['e0','e1','e2','e3','e4','e5'].forEach((id,i)=>setTimeout(()=>show(id),i*100));
+  await wt(1400);
+
+  // SIMULATE EARNING POINTS — progress fills to 100%
+  await mv(500,210,1000);
+  document.getElementById('prFill').style.width='100%';
+  document.getElementById('prPts').textContent='500 / 500 pts';
+  await wt(900);
+
+  // LEVEL UP
+  const ol=document.getElementById('levelupOverlay');
+  ol.classList.add('show');
+  await wt(2200);
+  ol.classList.remove('show');
+  await wt(400);
+
+  // Update tier display
+  document.getElementById('tierName').textContent='Captain';
+  document.getElementById('tierPts').textContent='500 / 1,000 pts';
+  document.getElementById('prPts').textContent='500 / 1,000 pts';
+  document.getElementById('prFill').style.width='50%';
+
+  // Unlock Club SI perk
+  const p5=document.getElementById('p5');
+  p5.classList.remove('pi-locked');p5.classList.add('pi-unlocked');
+  const icon=document.getElementById('p5icon');
+  icon.classList.remove('pii-off');icon.classList.add('pii-on');icon.textContent='✓';
+  const title=document.getElementById('p5title');
+  title.classList.remove('pit-off');title.classList.add('pit-on');
+  const label=document.getElementById('p5label');
+  label.textContent='Unlocked — welcome to Captain';
+  label.style.color='var(--green)';
+
+  await wt(2200);
+
+  // RESET
+  ['p0','p1','p2','p3','p4','p5','p6','p7'].forEach(id=>document.getElementById(id)?.classList.remove('show'));
+  ['b0','b1','b2','b3','b4','b5'].forEach(id=>document.getElementById(id)?.classList.remove('show'));
+  ['a0','a1','a2','a3','a4'].forEach(id=>document.getElementById(id)?.classList.remove('show'));
+  ['e0','e1','e2','e3','e4','e5'].forEach(id=>document.getElementById(id)?.classList.remove('show'));
+  for(let i=0;i<11;i++) document.getElementById('sd'+i)?.classList.remove('pop');
+  document.getElementById('prFill').style.width='0%';
+  document.getElementById('prPts').textContent='340 / 500 pts';
+  document.getElementById('tierName').textContent='Insider';
+  document.getElementById('tierPts').textContent='340 / 500 pts';
+  // Reset p5
+  p5.classList.add('pi-locked');p5.classList.remove('pi-unlocked');
+  icon.classList.add('pii-off');icon.classList.remove('pii-on');icon.textContent='🔒';
+  title.classList.add('pit-off');title.classList.remove('pit-on');
+  label.textContent='Unlocks at Captain · 500 pts';label.style.color='';
+
+  run();
+}
+window.onload=()=>setTimeout(run,400);
+</script>
+</body>
+</html>
